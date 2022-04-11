@@ -1,0 +1,24 @@
+Проще тогда netwatch
+
+/ip firewall nat
+add action=netmap chain=dstnat dst-address=xx.xx.xx.xx dst-port=9999 protocol=tcp to-addresses=yy.yy.yy.yy to-ports=9999 comment=switch2reserve
+add action=netmap chain=srcnat dst-address=yy.yy.yy.yy dst-port=9999 protocol=tcp to-addresses=xx.xx.xx.xx to-ports=9999 comment=switch2reserve
+
+
+netwatch
+
+"UP"
+/ip firewall nat set [find comment="switch2reserve"] disabled=yes
+:delay 2
+/ip firewall nat set [find comment="Main"] disabled=no
+
+
+"DOWN"
+/log warning "server Main may bee is fail…"
+:local time [/sys clock get time]
+:local checkip [/ping 192.168.0.101 count=5]
+:if (checkip = 0) do={
+/log error «server Main is DOWN!!!…»
+/ip firewall nat set [find comment="switch2reserve"] disabled=no
+:delay 2
+/ip firewall nat set [find comment="Main"] disabled=yes
